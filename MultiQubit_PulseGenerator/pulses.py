@@ -287,8 +287,31 @@ class CZ(Pulse):
         # "Fast adiabatic qubit gates using only sigma_z control"
         # PRA 90, 022307 (2014)
         # Initial and final angles on the |11>-|02> bloch sphere
-        self.theta_i = np.arctan(2*self.Coupling / self.Offset)
-        self.theta_f = np.arctan(2*self.Coupling / self.amplitude)
+
+        # Added a number of conditions to allow theta_f to be 0 or negative
+        # without thowing an error. The arctan is hacked such that negative
+        # theta gives a larger amplitude (deeper into the avoided crossing).
+
+        if self.Offset > 0:
+            self.theta_i = np.arctan(2*self.Coupling / self.Offset)
+        elif self.Offset == 0:
+            self.theta_i = np.arctan(2*self.Coupling * np.inf)
+        elif self.Offset == -0:
+            self.theta_i = np.arctan(2*self.Coupling * np.inf)
+        else:
+            self.theta_f = np.pi + np.arctan(2*self.Coupling / self.Offset)
+
+        if self.amplitude > 0:
+            self.theta_f = np.arctan(2*self.Coupling / self.amplitude)
+        elif self.amplitude == 0:
+            self.theta_f = np.arctan(2*self.Coupling * np.inf)
+        elif self.amplitude == -0:
+            self.theta_f = np.arctan(2*self.Coupling * np.inf)
+        else:
+            self.theta_f = np.pi + np.arctan(2*self.Coupling / self.amplitude)
+
+        # self.theta_i = np.arctan(2*self.Coupling / self.Offset)
+        # self.theta_f = np.arctan(2*self.Coupling / self.amplitude)
         log.log(msg="calc", level=30)
 
         # Renormalize fourier coefficients to initial and final angles
